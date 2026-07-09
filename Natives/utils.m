@@ -196,7 +196,23 @@ BOOL DeviceCanCreateRXMap(void) {
 }
 BOOL DeviceHasTXM(void) {
     DIR *d = opendir("/private/preboot");
-    if(!d) return NO;
+    if(!d) {
+        // /private/preboot is not accessible in 27.0 and 26.6?, fallback to speculation
+        NSUInteger (*MGGetSInt64Answer)(NSString *) = dlsym(RTLD_DEFAULT, "MGGetSInt64Answer");
+        NSUInteger chipID = MGGetSInt64Answer(@"ChipID");
+        switch(chipID) {
+            case 0x8020: // A12
+            case 0x8027: // A12X/Z
+                return NO;
+            case 0x8030: // A13
+            case 0x8101: // A14
+            case 0x8103: // M1
+                if (@available(iOS 27.0, *)) return YES; return NO;
+            default:
+                if (@available(iOS 19.0, *)) return YES; return NO;
+        }
+    }
+    // deterministically detect TXM for 17.0-26.5?
     struct dirent *dir;
     char txmPath[PATH_MAX];
     while ((dir = readdir(d)) != NULL) {
