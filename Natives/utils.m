@@ -194,7 +194,8 @@ BOOL DeviceCanCreateRXMap(void) {
     munmap(map, getpagesize());
     return ret == 0;
 }
-BOOL DeviceHasTXM(void) {
+
+BOOL DeviceHasTXMReal(void) {
     DIR *d = opendir("/private/preboot");
     if(!d) {
         // /private/preboot is not accessible in 27.0 and 26.6?, fallback to speculation
@@ -224,6 +225,11 @@ BOOL DeviceHasTXM(void) {
     closedir(d);
     return access(txmPath, F_OK) == 0;
 }
+// Thin wrapper of DeviceHasJITFlags to respect overriden flag
+__exported BOOL DeviceHasTXM(void) {
+    return DeviceHasJITFlags(JIT_FLAG_HAS_TXM);
+}
+
 JITFlags DeviceGetJITFlags(BOOL refresh) {
     static JITFlags cachedFlags = 0;
     static dispatch_once_t onceToken;
@@ -246,7 +252,7 @@ JITFlags DeviceGetJITFlags(BOOL refresh) {
                 cachedFlags |= JIT_FLAG_FORCE_MIRRORED;
             }
         }
-        if (DeviceHasTXM()) {
+        if (DeviceHasTXMReal()) {
             cachedFlags |= JIT_FLAG_HAS_TXM;
         }
         
