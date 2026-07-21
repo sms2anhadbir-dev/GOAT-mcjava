@@ -125,7 +125,9 @@ add_executable(AngelAuraAmethyst
 
   installer/FabricInstallViewController.m
   installer/ForgeInstallViewController.m
+  installer/ModJarInspector.m
   installer/ModpackInstallViewController.m
+  installer/UniversalModInstaller.m
   installer/FabricUtils.m
   installer/modpack/ModpackUtils.m
   installer/modpack/ModpackAPI.m
@@ -135,6 +137,8 @@ add_executable(AngelAuraAmethyst
   input/ControllerInput.m
   input/GyroInput.m
   input/KeyboardInput.m
+
+  skin/MCPackSkinImporter.m
 
   AccountListViewController.m
   AppDelegate.m

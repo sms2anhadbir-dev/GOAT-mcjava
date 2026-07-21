@@ -177,10 +177,10 @@
     [self.tableView registerClass:[MinecraftVersionHeaderView class] forHeaderFooterViewReuseIdentifier:@"MinecraftVersionHeader"];
     
     UISegmentedControl *segment = [[UISegmentedControl alloc] initWithItems:@[@"Forge", @"NeoForge"]];
-    segment.selectedSegmentIndex = 0;
+    segment.selectedSegmentIndex = [self.preselectedVendor isEqualToString:@"NeoForge"] ? 1 : 0;
     [segment addTarget:self action:@selector(segmentChanged:) forControlEvents:UIControlEventValueChanged];
     self.navigationItem.titleView = segment;
-    self.currentVendor = @"Forge";
+    self.currentVendor = [segment titleForSegmentAtIndex:segment.selectedSegmentIndex];
 
     self.searchController = [[UISearchController alloc] initWithSearchResultsController:nil];
     self.searchController.searchResultsUpdater = (id<UISearchResultsUpdating>)self;
@@ -221,7 +221,7 @@
     self.displayNameCache = [NSMutableDictionary new];
     self.searchQueue = dispatch_queue_create("com.amethyst.forge.search", DISPATCH_QUEUE_SERIAL);
     
-    [self loadMetadataFromVendor:@"Forge"];
+    [self loadMetadataFromVendor:self.currentVendor];
 }
 
 - (void)dealloc {
@@ -1053,8 +1053,16 @@
 
         [self switchToReadyState];
         [self.tableView reloadData];
-        
-        if (self.versionList.count > 0) {
+
+        if (self.preselectedMCVersion) {
+            NSUInteger section = [self.versionList indexOfObject:self.preselectedMCVersion];
+            if (section != NSNotFound) {
+                self.visibilityList[section] = @(YES);
+                [self.tableView reloadSections:[NSIndexSet indexSetWithIndex:section] withRowAnimation:UITableViewRowAnimationAutomatic];
+                [self.tableView scrollToRowAtIndexPath:[NSIndexPath indexPathForRow:0 inSection:section]
+                    atScrollPosition:UITableViewScrollPositionTop animated:YES];
+            }
+        } else if (self.versionList.count > 0) {
             [self.tableView setContentOffset:CGPointZero animated:YES];
         }
     });

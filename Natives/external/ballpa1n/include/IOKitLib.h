@@ -9,6 +9,10 @@ typedef UInt32 IOOptionBits;
 
 typedef mach_port_t io_object_t;
 typedef io_object_t io_registry_entry_t;
+// Not part of the public iOS SDK's headers (IOKit.framework's IOTypes.h is
+// absent from the theos/sdks dump), so it's defined here to match Apple's
+// real IOKit type - see the real IOTypes.h: typedef char io_string_t[512].
+typedef char io_string_t[512];
 
 extern mach_port_t kIOMainPortDefault;
 

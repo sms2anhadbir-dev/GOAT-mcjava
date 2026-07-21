@@ -1,4 +1,5 @@
 #import <Foundation/Foundation.h>
+#import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
 
 #import "DBNumberedSlider.h"
 #import "HostManagerBridge.h"
@@ -10,11 +11,15 @@
 #import "LauncherPrefManageJREViewController.h"
 #import "UIKit+hook.h"
 
+#import "authenticator/BaseAuthenticator.h"
+#import "PLProfiles.h"
+#import "skin/MCPackSkinImporter.h"
+
 #import "config.h"
 #import "ios_uikit_bridge.h"
 #import "utils.h"
 
-@interface LauncherPreferencesViewController()
+@interface LauncherPreferencesViewController()<UIDocumentPickerDelegate>
 @property(nonatomic) NSArray<NSString*> *rendererKeys, *rendererList;
 @end
 
@@ -67,6 +72,15 @@
               @"icon": @"eyeglasses",
               @"type": self.typeSwitch,
               @"enableCondition": whenNotInGame
+            },
+            @{@"key": @"import_mcpack_skin",
+              @"hasDetail": @YES,
+              @"icon": @"person.crop.square",
+              @"type": self.typeButton,
+              @"enableCondition": whenNotInGame,
+              @"action": ^void(){
+                  [self actionImportMCPackSkin];
+              }
             },
             @{@"key": @"debug_logging",
               @"hasDetail": @YES,
@@ -442,6 +456,82 @@
         return nil;
     }
     return footer;
+}
+
+#pragma mark MCPack skin import
+
+- (void)actionImportMCPackSkin {
+    NSString *username = BaseAuthenticator.current.authData[@"username"];
+    if (username.length == 0) {
+        showDialog(localize(@"Error", nil), localize(@"preference.detail.import_mcpack_skin.no_account", nil));
+        return;
+    }
+
+    UTType *mcpackType = [UTType typeWithFilenameExtension:@"mcpack" conformingToType:UTTypeZIP];
+    UIDocumentPickerViewController *documentPicker = [[UIDocumentPickerViewController alloc]
+        initForOpeningContentTypes:@[mcpackType]];
+    documentPicker.delegate = self;
+    documentPicker.modalPresentationStyle = UIModalPresentationFormSheet;
+    [self presentViewController:documentPicker animated:YES completion:nil];
+}
+
+- (void)documentPicker:(UIDocumentPickerViewController *)controller didPickDocumentAtURL:(NSURL *)url {
+    [url startAccessingSecurityScopedResource];
+
+    NSString *tmpPath = [NSTemporaryDirectory() stringByAppendingPathComponent:url.path.lastPathComponent];
+    [NSFileManager.defaultManager removeItemAtPath:tmpPath error:nil];
+    NSError *error;
+    BOOL copied = [NSFileManager.defaultManager copyItemAtPath:url.path toPath:tmpPath error:&error];
+    [url stopAccessingSecurityScopedResource];
+    if (!copied) {
+        showDialog(localize(@"Error", nil), error.localizedDescription);
+        return;
+    }
+
+    NSArray<MCPackSkinEntry *> *skins = [MCPackSkinImporter listSkinsInPack:tmpPath error:&error];
+    if (!skins) {
+        [NSFileManager.defaultManager removeItemAtPath:tmpPath error:nil];
+        showDialog(localize(@"Error", nil), error.localizedDescription);
+        return;
+    }
+
+    if (skins.count == 1) {
+        [self finishImportingSkin:skins.firstObject fromPack:tmpPath];
+        return;
+    }
+
+    UIAlertController *picker = [UIAlertController alertControllerWithTitle:localize(@"preference.title.import_mcpack_skin", nil)
+        message:nil preferredStyle:UIAlertControllerStyleActionSheet];
+    for (MCPackSkinEntry *entry in skins) {
+        [picker addAction:[UIAlertAction actionWithTitle:entry.displayName style:UIAlertActionStyleDefault
+            handler:^(UIAlertAction *action) {
+                [self finishImportingSkin:entry fromPack:tmpPath];
+            }]];
+    }
+    [picker addAction:[UIAlertAction actionWithTitle:localize(@"Cancel", nil) style:UIAlertActionStyleCancel
+        handler:^(UIAlertAction *action) {
+            [NSFileManager.defaultManager removeItemAtPath:tmpPath error:nil];
+        }]];
+    picker.popoverPresentationController.sourceView = self.view;
+    picker.popoverPresentationController.sourceRect = CGRectMake(self.view.bounds.size.width/2, self.view.bounds.size.height/2, 1, 1);
+    [self presentViewController:picker animated:YES completion:nil];
+}
+
+- (void)finishImportingSkin:(MCPackSkinEntry *)entry fromPack:(NSString *)packPath {
+    NSString *username = BaseAuthenticator.current.authData[@"username"];
+    NSString *gameDir = [NSString stringWithFormat:@"%s/instances/%@/%@",
+        getenv("POJAV_HOME"), getPrefObject(@"general.game_directory"),
+        [PLProfiles resolveKeyForCurrentProfile:@"gameDir"]].stringByStandardizingPath;
+
+    NSError *error;
+    BOOL success = [MCPackSkinImporter installSkin:entry fromPack:packPath forUsername:username toGameDir:gameDir error:&error];
+    [NSFileManager.defaultManager removeItemAtPath:packPath error:nil];
+
+    if (success) {
+        showDialog(localize(@"preference.title.import_mcpack_skin", nil), localize(@"preference.detail.import_mcpack_skin.done", nil));
+    } else {
+        showDialog(localize(@"Error", nil), error.localizedDescription);
+    }
 }
 
 @end

@@ -77,7 +77,13 @@
           imageName:@"MenuInstallJar" action:^{
         [contentNavigationController performSelector:@selector(enterModInstaller)];
     }]];
-    
+    [self.options addObject:
+     (id)[LauncherMenuCustomItem
+          title:localize(@"launcher.menu.install_mod", nil)
+          imageName:@"MenuInstallJar" action:^{
+        [contentNavigationController performSelector:@selector(enterUniversalModInstaller)];
+    }]];
+
     // TODO: Finish log-uploading service integration
     [self.options addObject:
      (id)[LauncherMenuCustomItem

@@ -13,6 +13,7 @@
 #import "PickTextField.h"
 #import "PLPickerView.h"
 #import "PLProfiles.h"
+#import "installer/UniversalModInstaller.h"
 #import "UIKit+AFNetworking.h"
 #import "UIKit+hook.h"
 #import "ios_uikit_bridge.h"
@@ -36,6 +37,7 @@ static void *ProgressObserverContext = &ProgressObserverContext;
 @property(nonatomic) UIButton* buttonInstall;
 @property(nonatomic) UIBarButtonItem* buttonInstallItem;
 @property(nonatomic) int profileSelectedAt;
+@property(nonatomic) BOOL isUniversalModPick;
 
 @end
 
@@ -232,6 +234,17 @@ static void *ProgressObserverContext = &ProgressObserverContext;
 }
 
 - (void)enterModInstaller {
+    self.isUniversalModPick = NO;
+    UIDocumentPickerViewController *documentPicker = [[UIDocumentPickerViewController alloc]
+        initForOpeningContentTypes:@[[UTType typeWithMIMEType:@"application/java-archive"]]
+        asCopy:YES];
+    documentPicker.delegate = self;
+    documentPicker.modalPresentationStyle = UIModalPresentationFormSheet;
+    [self presentViewController:documentPicker animated:YES completion:nil];
+}
+
+- (void)enterUniversalModInstaller {
+    self.isUniversalModPick = YES;
     UIDocumentPickerViewController *documentPicker = [[UIDocumentPickerViewController alloc]
         initForOpeningContentTypes:@[[UTType typeWithMIMEType:@"application/java-archive"]]
         asCopy:YES];
@@ -255,6 +268,11 @@ static void *ProgressObserverContext = &ProgressObserverContext;
 }
 
 - (void)documentPicker:(UIDocumentPickerViewController *)controller didPickDocumentAtURL:(NSURL *)url {
+    if (self.isUniversalModPick) {
+        self.isUniversalModPick = NO;
+        [UniversalModInstaller installModAtPath:url.path presentingViewController:self];
+        return;
+    }
     [self enterModInstallerWithPath:url.path hitEnterAfterWindowShown:NO];
 }
 

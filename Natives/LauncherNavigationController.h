@@ -8,6 +8,7 @@ NSMutableArray<NSDictionary *> *localVersionList, *remoteVersionList;
 @property(nonatomic) UILabel* progressText;
 
 - (void)enterModInstallerWithPath:(NSString *)path hitEnterAfterWindowShown:(BOOL)hitEnter;
+- (void)enterUniversalModInstaller;
 - (void)fetchLocalVersionList;
 - (void)setInteractionEnabled:(BOOL)enable forDownloading:(BOOL)downloading;
 

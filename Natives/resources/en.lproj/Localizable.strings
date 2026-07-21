@@ -76,6 +76,7 @@
 
 "launcher.menu.custom_controls" = "Custom controls";
 "launcher.menu.execute_jar" = "Execute .jar";
+"launcher.menu.install_mod" = "Install Mod (Auto-detect Loader)";
 
 "launcher.wait_jit.title" = "Waiting for JIT";
 "launcher.wait_jit.message" = "Amethyst relies on Just-in-time compilation for Java to work at maximum performance.";
@@ -151,6 +152,10 @@
 "preference.detail.check_sha" = "This option forces launcher to check the file hash if it's available. Prevents broken downloads.";
 "preference.title.cosmetica" = "Cosmetica Capes";
 "preference.detail.cosmetica" = "Enable capes from Cosmetica (previously Arc). For more information please visit https://cosmetica.cc. Requires OptiFine";
+"preference.title.import_mcpack_skin" = "Import Bedrock/Education Skin (.mcpack)";
+"preference.detail.import_mcpack_skin" = "Import a skin from a Minecraft Bedrock or Education Edition .mcpack skin pack. Requires the CustomSkinLoader mod to be installed to actually show in-game.";
+"preference.detail.import_mcpack_skin.no_account" = "Log into an account first so the skin can be saved under your username.";
+"preference.detail.import_mcpack_skin.done" = "Skin imported. It will show up in-game once you launch with the CustomSkinLoader mod installed.";
 "preference.title.debug_logging" = "Debug logging";
 "preference.detail.debug_logging" = "Logs internal settings and actions to latestlog.txt. This helps the developers find issues easier, but Minecraft may run slower as the logs will be written to more often.";
 "preference.title.appicon" = "Set app icon";
